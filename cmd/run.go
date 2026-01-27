@@ -13,7 +13,7 @@ import (
 func Run() {
 
 	filePath := flag.String("p", `./images/tjImg_logo.png`, "image file path")
-	// scale := flag.Int("x", 10, "scale down the image x time")
+	scale := flag.Int("x", 10, "scale down the image x time")
 	flag.Parse()
 
 	file, err := os.Open(*filePath)
@@ -34,8 +34,6 @@ func Run() {
 	xMin, xMax := bounds.Min.X, bounds.Max.X
 	yMin, yMax := bounds.Min.Y, bounds.Max.Y
 
-	// imageWidth := xMax - xMin
-	// imageHeight := yMax - yMin
 	var grayImageCodes [][]byte
 
 	for y := yMin; y < yMax; y++ {
@@ -45,7 +43,6 @@ func Run() {
 			r, g, b = r>>8, g>>8, b>>8 // convert 16 bit to 8 bit
 
 			grayScale := int((0.299 * float64(r)) + (0.587 * float64(g)) + (0.114 * float64(b)))
-			// grayImageCodes = append(grayImageCodes, byte(grayScale))
 			rowGrayCodes = append(rowGrayCodes, byte(grayScale))
 			fmt.Printf("Color code : %v %v %v %v\n", r, g, b, grayScale)
 		}
@@ -73,6 +70,31 @@ func Run() {
 	// 		rowCompressGrayimageCode = append(rowCompressGrayimageCode, byte(grayValueSum / *scale), byte('\n'))
 	// 	}
 	// }
-	fmt.Println(grayImageCodes)
 
+	// Row wise image gray code compression.
+	var rowCompressGrayimageCode [][]byte
+	for _, rowCodes := range grayImageCodes {
+		counter := 1
+		avgRowValue := 0
+		var tempCompressRowCodes []byte
+		for _, rowValue := range rowCodes {
+			if counter == *scale+1 {
+				tempCompressRowCodes = append(tempCompressRowCodes, byte(avgRowValue / *scale))
+				avgRowValue = 0
+				counter = 1
+			}
+			avgRowValue += int(rowValue)
+			counter++
+		}
+
+		if counter != 1 {
+			tempCompressRowCodes = append(tempCompressRowCodes, byte(avgRowValue))
+			avgRowValue = 0
+			counter = 1
+		}
+
+		rowCompressGrayimageCode = append(rowCompressGrayimageCode, tempCompressRowCodes)
+	}
+
+	fmt.Println(rowCompressGrayimageCode)
 }
