@@ -10,6 +10,36 @@ import (
 	"os"
 )
 
+func rowCompress(imageMatrix [][]byte, scale int) [][]byte {
+	// Row wise image gray code compression.
+	var rowCompressGrayimageCode [][]byte
+
+	for _, rowCodes := range imageMatrix {
+		counter := 1
+		avgRowValue := 0
+		var tempCompressRowCodes []byte
+		for _, rowValue := range rowCodes {
+			if counter == scale+1 {
+				tempCompressRowCodes = append(tempCompressRowCodes, byte(avgRowValue/scale))
+				avgRowValue = 0
+				counter = 1
+			}
+			avgRowValue += int(rowValue)
+			counter++
+		}
+
+		if counter != 1 {
+			tempCompressRowCodes = append(tempCompressRowCodes, byte(avgRowValue))
+			avgRowValue = 0
+			counter = 1
+		}
+
+		rowCompressGrayimageCode = append(rowCompressGrayimageCode, tempCompressRowCodes)
+	}
+
+	return rowCompressGrayimageCode
+}
+
 func Run() {
 
 	filePath := flag.String("p", `./images/tjImg_logo.png`, "image file path")
@@ -49,52 +79,41 @@ func Run() {
 		grayImageCodes = append(grayImageCodes, rowGrayCodes)
 	}
 
-	// colGroup := imageWidth / *scale
-	// rowGroup := imageHeight / *scale
+	rowCompressGrayimageCode := rowCompress(grayImageCodes, *scale) // compress row wise scale time
 
-	// var rowCompressGrayimageCode []byte
+	// // column wise compress
+	// var colCompressGrayimageCode [][]byte
+	// totalColNumber := len(rowCompressGrayimageCode[0]) // col number in a image
 
-	// for row := range rowGroup {
-	// 	for col := range colGroup {
-	// 		grayValueSum := 0
-	// 		for s := range *scale {
-	// 			idx := row*col**scale + s
+	// counter := 1
+	// tempColCompresionValues := make([]int, totalColNumber)
+	// for _, row := range rowCompressGrayimageCode {
 
-	// 			fmt.Println("test", idx)
-	// 			if grayImageCodes[idx] == byte('\n') { // 10 mean \n new line
-	// 				break
-	// 			}
-	// 			grayValueSum += int(grayImageCodes[idx])
-	// 			rowCompressGrayimageCode = append(rowCompressGrayimageCode, byte(grayValueSum / *scale))
-	// 		}
-	// 		rowCompressGrayimageCode = append(rowCompressGrayimageCode, byte(grayValueSum / *scale), byte('\n'))
+	// 	for idx, value := range row {
+	// 		tempColCompresionValues[idx] = tempColCompresionValues[idx] + int(value)
 	// 	}
+
+	// 	// if counter == *scale {
+	// 	// 	// for idx, value := range row {
+	// 	// 	// 	tempColCompresionValues[idx] = byte(int(value) / *scale)
+	// 	// 	// }
+	// 	// 	colCompressGrayimageCode = append(colCompressGrayimageCode, tempColCompresionValues)
+	// 	// 	tempColCompresionValues = make([]byte, colNumber)
+	// 	// 	counter = 1
+
+	// 	// 	// for idx, value := range row {
+	// 	// 	// 	tempColCompresionValues[idx] += value
+	// 	// 	// }
+	// 	// 	// counter++
+	// 	// } else {
+	// 	// 	fmt.Println("test", idx)
+	// 	// 	for idx, value := range row {
+	// 	// 		tempColCompresionValues[idx] += value
+	// 	// 	}
+	// 	// 	counter++
+	// 	// }
 	// }
 
-	// Row wise image gray code compression.
-	var rowCompressGrayimageCode [][]byte
-	for _, rowCodes := range grayImageCodes {
-		counter := 1
-		avgRowValue := 0
-		var tempCompressRowCodes []byte
-		for _, rowValue := range rowCodes {
-			if counter == *scale+1 {
-				tempCompressRowCodes = append(tempCompressRowCodes, byte(avgRowValue / *scale))
-				avgRowValue = 0
-				counter = 1
-			}
-			avgRowValue += int(rowValue)
-			counter++
-		}
+	// fmt.Println(tempColCompresionValues)
 
-		if counter != 1 {
-			tempCompressRowCodes = append(tempCompressRowCodes, byte(avgRowValue))
-			avgRowValue = 0
-			counter = 1
-		}
-
-		rowCompressGrayimageCode = append(rowCompressGrayimageCode, tempCompressRowCodes)
-	}
-
-	fmt.Println(rowCompressGrayimageCode)
 }
