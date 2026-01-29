@@ -40,6 +40,91 @@ func rowCompress(imageMatrix [][]byte, scale int) [][]byte {
 	return rowCompressGrayimageCode
 }
 
+func colCopress(imageMatrix [][]byte, scale int) [][]byte {
+	// column wise compress
+	var colCompressGrayimageCode [][]byte
+	totalColNumber := len(imageMatrix[0]) // col number in a image
+
+	counter := 1
+	tempColCompresionValues := make([]int, totalColNumber)
+	for _, row := range imageMatrix {
+
+		if counter == scale+1 {
+			tempColCompresionValuesByte := make([]byte, totalColNumber)
+			// convert int to byte slice
+			for idx, value := range tempColCompresionValues {
+				tempColCompresionValuesByte[idx] = byte(value / scale)
+			}
+
+			colCompressGrayimageCode = append(colCompressGrayimageCode, tempColCompresionValuesByte) // puting compress values
+
+			counter = 1
+			tempColCompresionValues = make([]int, totalColNumber)
+
+			// scale + 1 row are ignore so i have to do this
+			for idx, value := range row {
+				tempColCompresionValues[idx] = tempColCompresionValues[idx] + int(value)
+			}
+			counter++
+		} else {
+			for idx, value := range row {
+				tempColCompresionValues[idx] = tempColCompresionValues[idx] + int(value)
+			}
+			counter++
+		}
+	}
+
+	if counter != 1 {
+		tempColCompresionValuesByte := make([]byte, totalColNumber)
+
+		for idx, value := range tempColCompresionValues {
+			tempColCompresionValuesByte[idx] = byte(value / scale) // counter and scale both can use for division
+		}
+
+		colCompressGrayimageCode = append(colCompressGrayimageCode, tempColCompresionValuesByte) // puting compress values
+
+	}
+
+	return colCompressGrayimageCode
+
+}
+
+func imageCompression(imageMatrix [][]byte, scale int) [][]byte {
+	var rowCompressGrayimageCode [][]byte
+
+	var colCompressGrayimageCode [][]byte
+
+	if scale != 1 {
+		rowCompressGrayimageCode = rowCompress(imageMatrix, scale) // compress row wise scale time
+
+		colCompressGrayimageCode = colCopress(rowCompressGrayimageCode, scale) // column wise compress
+
+		return colCompressGrayimageCode
+	}
+
+	return imageMatrix
+}
+
+func imageToAscii(imageMatrix [][]byte) [][]string {
+	chars := " .`'^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+	lenChars := len(chars) - 1
+	palletSize := len(imageMatrix[0])
+
+	asciiArt := make([][]string, len(imageMatrix))
+
+	for _, row := range imageMatrix {
+		tempAsciiChars := make([]string, palletSize)
+
+		for idx, v := range row {
+			asciiIdx := (int(v) * lenChars) / 255
+			tempAsciiChars[idx] = string(chars[asciiIdx])
+		}
+
+		asciiArt = append(asciiArt, tempAsciiChars)
+	}
+	return asciiArt
+}
+
 func Run() {
 
 	filePath := flag.String("p", `./images/tjImg_logo.png`, "image file path")
@@ -79,41 +164,15 @@ func Run() {
 		grayImageCodes = append(grayImageCodes, rowGrayCodes)
 	}
 
-	rowCompressGrayimageCode := rowCompress(grayImageCodes, *scale) // compress row wise scale time
+	compressImageCodes := imageCompression(grayImageCodes, *scale)
 
-	// // column wise compress
-	// var colCompressGrayimageCode [][]byte
-	// totalColNumber := len(rowCompressGrayimageCode[0]) // col number in a image
+	asciiArt := imageToAscii(compressImageCodes)
 
-	// counter := 1
-	// tempColCompresionValues := make([]int, totalColNumber)
-	// for _, row := range rowCompressGrayimageCode {
-
-	// 	for idx, value := range row {
-	// 		tempColCompresionValues[idx] = tempColCompresionValues[idx] + int(value)
-	// 	}
-
-	// 	// if counter == *scale {
-	// 	// 	// for idx, value := range row {
-	// 	// 	// 	tempColCompresionValues[idx] = byte(int(value) / *scale)
-	// 	// 	// }
-	// 	// 	colCompressGrayimageCode = append(colCompressGrayimageCode, tempColCompresionValues)
-	// 	// 	tempColCompresionValues = make([]byte, colNumber)
-	// 	// 	counter = 1
-
-	// 	// 	// for idx, value := range row {
-	// 	// 	// 	tempColCompresionValues[idx] += value
-	// 	// 	// }
-	// 	// 	// counter++
-	// 	// } else {
-	// 	// 	fmt.Println("test", idx)
-	// 	// 	for idx, value := range row {
-	// 	// 		tempColCompresionValues[idx] += value
-	// 	// 	}
-	// 	// 	counter++
-	// 	// }
-	// }
-
-	// fmt.Println(tempColCompresionValues)
+	for _, row := range asciiArt {
+		for _,v := range row {
+			fmt.Print(v)
+		}
+		fmt.Println()
+	}
 
 }
